@@ -84,6 +84,10 @@ for binary in dropbear dropbearkey; do
 done
 install -m 644 "$work/$dropbear/LICENSE" "$payload/Dropbear-LICENSE.txt"
 install -m 644 "$work/$libxcrypt/COPYING.LIB" "$payload/libxcrypt-COPYING.LIB"
+libc_notice=/usr/share/doc/libc6-dev-arm64-cross/copyright
+if [[ -r "$libc_notice" ]]; then
+    install -m 644 "$libc_notice" "$payload/glibc-COPYRIGHT.txt"
+fi
 install -m 644 "$project/LICENSE" "$work/package/LICENSE"
 install -m 644 "$project/README.md" "$work/package/README.md"
 cp -R "$project/docs" "$work/package/docs"
@@ -107,7 +111,9 @@ cp -R "$project/docs" "$work/corresponding-source/"
 {
     aarch64-linux-gnu-gcc -dumpfullversion
     dpkg-query -W libc6-dev-arm64-cross gcc-aarch64-linux-gnu
-    echo 'GNU C Library source: https://sourceware.org/git/glibc.git'
+    libc_version=$(dpkg-query -W -f='${Version}' libc6-dev-arm64-cross)
+    printf 'Ubuntu GNU C Library source: https://launchpad.net/ubuntu/+source/glibc/%s\n' "${libc_version%cross*}"
+    echo 'Ubuntu cross toolchain source: https://launchpad.net/ubuntu/+source/cross-toolchain-base'
 } >"$work/corresponding-source/BUILD-ENVIRONMENT.txt"
 tar -czf "$output/$base-source.tar.gz" -C "$work/corresponding-source" .
 (

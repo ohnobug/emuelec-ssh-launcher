@@ -5,9 +5,13 @@ project=$(cd -- "$(dirname -- "$0")/.." && pwd)
 release=$(cat "$project/VERSION")
 zipfile="$project/dist/emuelec-ssh-launcher-$release-arm64.zip"
 qemu=${QEMU_AARCH64:-qemu-aarch64-static}
-work=$(mktemp -d)
+work=$(mktemp -d "$HOME/.emuelec-ssh-test.XXXXXX")
 server=
 cleanup() {
+    local status=$?
+    if [[ "$status" -ne 0 && -f "$work/server.log" ]]; then
+        cat "$work/server.log" >&2
+    fi
     if [[ -n "$server" ]]; then kill "$server" 2>/dev/null || true; fi
     rm -rf -- "$work"
 }
