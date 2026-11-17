@@ -1,0 +1,35 @@
+name: Build and publish ARM64 release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the ARM64 toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
+            binutils-aarch64-linux-gnu ca-certificates curl gnupg file python3 \
+            openssh-client openssl qemu-user-static
+      - name: Build the installable ZIP and corresponding source
+        run: |
+          test "$GITHUB_REF_NAME" = "$(cat VERSION)"
+          bash scripts/build.sh
+      - name: Test SSH key and password authentication
+        run: sudo bash scripts/test-arm64.sh
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --verify-tag \
+            --title "EmuELEC SSH Launcher $GITHUB_REF_NAME" \
+            --notes-file docs/release-notes.md \
+            dist/*-arm64.zip dist/*-source.tar.gz dist/SHA256SUMS

@@ -1,0 +1,6 @@
+/.cache/
+/build/
+/dist/
+authorized_keys
+password.hash
+*.log
